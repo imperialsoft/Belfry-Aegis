@@ -5,6 +5,8 @@
 
 #define WINDOW_WIDTH  450
 #define WINDOW_HEIGHT 450
+#define PI 3.14159265
+
 
 class GLWidget : public QGLWidget
 {

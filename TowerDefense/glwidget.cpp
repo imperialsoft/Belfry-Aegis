@@ -1,4 +1,5 @@
 #include "glwidget.h"
+#include "math.h"
 #include <QMouseEvent>
 
 GLWidget::GLWidget(QWidget *parent) :
@@ -16,10 +17,12 @@ GLdouble eye[]={0.0,0.0,5.0};
 GLdouble lookAt[]={0.0,0.0,0.0};
 GLdouble lookUp[]={0.0,1.0,0.0};
 GLdouble perspective[] = {100.0,1.0,10.0};
-GLfloat light0_pos[]={0.0,20.0,10.0,1.0};
+GLfloat light0_pos[]={0.0,20.0,0.0,0.0};
 GLfloat diffuse0[]={1.0,1.0,1.0,1.0};
-GLfloat ambient0[]={0.0,0.0,0.0,1.0};
+GLfloat ambient0[]={0.0,0.0,0.0,0.0};
 GLfloat specular0[]={1.0,1.0,1.0,1.0};
+GLfloat lookDir=270;
+GLfloat strafe=0;
 //**************************************************************************************
 //OpenGL Functions
 //**************************************************************************************
@@ -79,12 +82,54 @@ void GLWidget::paintGL()
     //glRotatef(vectorRotate[0],vectorRotate[1],vectorRotate[2],vectorRotate[3]);
     //glGetFloatv(GL_MODELVIEW_MATRIX,matrix);
     //glPopMatrix();
-    //loadImages();
-    glBegin(GL_POLYGON);
-        glVertex3f(-1.0,1.0,0.0);
-        glVertex3f(1.0,1.0,0.0);
-        glVertex3f(1.0,0.0,0.0);
-        glVertex3f(-1.0,0.0,0.0);
+
+    //setup a 3-d object to view
+    glBegin(GL_QUADS);
+        glVertex3f(-1.0,1.0,0.0);//A
+        glVertex3f(1.0,1.0,0.0);//B
+        glVertex3f(1.0,0.0,0.0);//C
+        glVertex3f(-1.0,0.0,0.0);//D
+
+        glVertex3f(-1.0,1.0,0.0);//A
+        glVertex3f(-1.0,0.0,0.0);//D
+        glVertex3f(-1.0,0.0,1.0);//E
+        glVertex3f(-1.0,1.0,1.0);//F
+
+        glVertex3f(-1.0,1.0,0.0);//A
+        glVertex3f(-1.0,1.0,1.0);//F
+        glVertex3f(1.0,1.0,1.0);//G
+        glVertex3f(1.0,1.0,0.0);//B
+
+        glVertex3f(-1.0,1.0,1.0);//F
+        glVertex3f(-1.0,0.0,1.0);//E
+        glVertex3f(1.0,0.0,1.0);//H
+        glVertex3f(1.0,1.0,1.0);//G
+
+        glVertex3f(-1.0,0.0,1.0);//E
+        glVertex3f(-1.0,0.0,0.0);//D
+        glVertex3f(1.0,0.0,0.0);//C
+        glVertex3f(1.0,0.0,1.0);//H
+
+        glVertex3f(1.0,1.0,1.0);//G
+        glVertex3f(1.0,0.0,1.0);//H
+        glVertex3f(1.0,0.0,0.0);//C
+        glVertex3f(1.0,1.0,0.0);//B
+    glEnd();
+    //Setup an axis representation
+    glBegin(GL_LINES);
+        //X-axis
+        glColor3f(1.0,0.0,0.0);
+        glVertex3f(-100.0,0.0,0.0);
+        glVertex3f(100.0,0.0,0.0);
+        //Y-axis
+        glColor3f(0.0,1.0,0.0);
+        glVertex3f(0.0,-100.0,0.0);
+        glVertex3f(0.0,100.0,0.0);
+        //Z-axis
+        glColor3f(0.0,0.0,1.0);
+        glVertex3f(0.0,0.0,-100.0);
+        glVertex3f(0.0,0.0,100.0);
+        glColor3f(color[0],color[1],color[2]);
     glEnd();
     glFlush();
 }
@@ -120,24 +165,58 @@ void GLWidget::keyPressEvent(QKeyEvent *event)
     {
         //Move Forward
     case Qt::Key_W:
-        eye[2]-=0.1;
+        eye[0]+= cos(lookDir*PI/180)/10;
+        eye[2]+= sin(lookDir*PI/180)/10;
         updateGL();
         break;
         //Move Back
     case Qt::Key_S:
-        eye[2]+=0.1;
+        eye[0]-= cos(lookDir*PI/180)/10;
+        eye[2]-= sin(lookDir*PI/180)/10;
         updateGL();
         break;
         //Move Left
     case Qt::Key_A:
-        eye[0]-=0.1;
-        lookAt[0]-=0.1;
+        strafe=lookDir+90%360;
+        eye[0]-= cos(strafe*PI/180)/10;
+        eye[2]-= sin(strafe*PI/180)/10;
+        lookAt[0]-= cos(strafe*PI/180)/10;
+        lookAt[2]-= sin(strafe*PI/180)/10;
         updateGL();
         break;
         //Move Right
     case Qt::Key_D:
-        eye[0]+=0.1;
-        lookAt[0]+=0.1;
+        strafe=lookDir+90%360;
+        eye[0]+= cos(strafe*PI/180)/10;
+        eye[2]+= sin(strafe*PI/180)/10;
+        lookAt[0]+= cos(strafe*PI/180)/10;
+        lookAt[2]+= sin(strafe*PI/180)/10;
+        updateGL();
+        break;
+
+    case Qt::Key_J:
+        lookDir+=1%360;
+        lookAt[0]= eye[0] + cos(lookDir*PI/180);
+        lookAt[1]=eye[1];
+        lookAt[2]= eye[2] + sin(lookDir*PI/180);
+        updateGL();
+        break;
+
+    case Qt::Key_L:
+        lookDir-=1%360;
+        lookAt[0]= eye[0] + cos(lookDir*PI/180);
+        lookAt[1]=eye[1];
+        lookAt[2]= eye[2] + sin(lookDir*PI/180);
+        updateGL();
+        break;
+
+    case Qt::Key_I:
+        eye[1]+=0.1;
+        updateGL();
+        break;
+
+    case Qt::Key_K:
+        eye[1]-=0.1;
         updateGL();
         break;
 
